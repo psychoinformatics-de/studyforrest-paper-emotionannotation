@@ -13,7 +13,7 @@
 #
 # Required arguments:
 #   1. path to store the generated inter-observer agreement times series
-#   2. path to store the generate figures
+#   2. path to store the generated figures
 #
 # The following python packages are required:
 #   - NumPy
@@ -594,8 +594,10 @@ if __name__ == '__main__':
     statspath=sys.argv[1]
     figpath=sys.argv[2]
 
-    os.makedirs(opj(statspath, 'timeseries'))
-    os.makedirs(opj(statspath, 'segmentation'))
+    for p in (opj(statspath, 'timeseries'),
+              opj(statspath, 'segmentation')):
+        if not os.path.exists(p):
+            os.makedirs(p)
 
     second_segments = get_nsecond_segments()
 
