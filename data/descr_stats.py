@@ -18,7 +18,6 @@
 # The following python packages are required:
 #   - NumPy
 #   - SciPy
-#   - PyMVPA
 #   - seaborn
 #
 # Example:
@@ -34,6 +33,136 @@ from scipy.stats import spearmanr
 
 # hard code the max duration of the movie stimulus
 maxmovietime = 7085.28
+
+#
+# Helpers from PyMVPA
+#
+def plot_bars(data, labels=None, title=None, ylim=None, ylabel=None,
+               width=0.2, offset=0.2, color='0.6', distance=1.0,
+               yerr='ste', xloc=None, **kwargs):
+    """Make bar plots with automatically computed error bars.
+
+    Candlestick plot (multiple interleaved barplots) can be done,
+    by calling this function multiple time with appropriatly modified
+    `offset` argument.
+
+    Parameters
+    ----------
+    data : array (nbars x nobservations) or other sequence type
+      Source data for the barplot. Error measure is computed along the
+      second axis.
+    labels : list or None
+      If not None, a label from this list is placed on each bar.
+    title : str
+      An optional title of the barplot.
+    ylim : 2-tuple
+      Y-axis range.
+    ylabel : str
+      An optional label for the y-axis.
+    width : float
+      Width of a bar. The value should be in a reasonable relation to
+      `distance`.
+    offset : float
+      Constant offset of all bar along the x-axis. Can be used to create
+      candlestick plots.
+    color : matplotlib color spec
+      Color of the bars.
+    distance : float
+      Distance of two adjacent bars.
+    yerr : {'ste', 'std', None}
+      Type of error for the errorbars. If `None` no errorbars are plotted.
+    xloc : sequence
+      Locations of the bars on the x axis.
+    **kwargs
+      Any additional arguments are passed to matplotlib's `bar()` function.
+    """
+    import pylab as pl
+    # determine location of bars
+    if xloc is None:
+        xloc = (np.arange(len(data)) * distance) + offset
+
+    if yerr == 'ste':
+        yerr = [np.std(d) / np.sqrt(len(d)) for d in data]
+    elif yerr == 'std':
+        yerr = [np.std(d) for d in data]
+    else:
+        # if something that we do not know just pass on
+        pass
+
+    # plot bars
+    plot = pl.bar(xloc,
+                 [np.mean(d) for d in data],
+                 yerr=yerr,
+                 width=width,
+                 color=color,
+                 ecolor='black',
+                 **kwargs)
+
+    if ylim:
+        pl.ylim(*(ylim))
+    if title:
+        pl.title(title)
+
+    if labels:
+        pl.xticks(xloc + width / 2, labels)
+
+    if ylabel:
+        pl.ylabel(ylabel)
+
+    # leave some space after last bar
+    pl.xlim(0, xloc[-1] + width + offset)
+
+    return plot
+
+def unique_combinations(L, n, sort=False):
+    """Return unique combinations form a list L of objects in groups of size n.
+
+    Parameters
+    ----------
+    L : list
+      list of unique ids
+    n : int
+      length of the subsets to return
+    sort : bool, optional
+      if True -- result is sorted before returning
+
+    If you are intended to use only a small subset of possible
+    combinations, it is advised to use a generator
+    `xunique_combinations`.
+    """
+    res = list(xunique_combinations(L, n))
+    if sort:
+        res = sorted(res)
+    return res
+
+
+def xunique_combinations(L, n):
+    """Generator of unique combinations form a list L of objects in
+    groups of size n.
+
+    Parameters
+    ----------
+    L : list
+      list of unique ids
+    n : int
+      grouping size
+
+    Adopted from Li Daobing
+    http://code.activestate.com/recipes/190465/
+    (MIT license, according to activestate.com's policy)
+
+    Also good discussions on combinations/variations/permutations
+    with various implementations are available at
+    http://mail.python.org/pipermail/python-list/2004-October/286054.html
+    """
+    if n == 0:
+        yield []
+    else:
+        for i in range(len(L)-n+1):
+            for cc in xunique_combinations(L[i+1:], n-1):
+                yield [L[i]]+cc
+
+
 
 #
 # Load data
